@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const validate = require("../helpers/validate");
 const User = require("../models/user");
 const jwt = require("../helpers/jwt");
+const mongoose = require('mongoose');
 
 const register = async (req, res) => {
     let params = req.body;
@@ -115,7 +116,27 @@ const login = async (req, res) => {
     });
 }
 
+const profile = async (req, res) => {
+
+    const id = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).send({
+            status: 'error',
+            message: 'ID no válido',
+        });
+    }
+
+    const user = await User.findOne({_id: id});
+
+    return res.status(200).send({
+        status: "success",
+        message: "Metodo de perfil",
+    });
+}
+
 module.exports = {
     register,
     login,
+    profile,
 }
