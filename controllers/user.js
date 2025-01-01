@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const validate = require("../helpers/validate");
+const fs = require("fs");
 const User = require("../models/user");
 const jwt = require("../helpers/jwt");
 const mongoose = require('mongoose');
@@ -132,6 +133,132 @@ const profile = async (req, res) => {
     return res.status(200).send({
         status: "success",
         message: "Metodo de perfil",
+        user: user
+    });
+}
+
+const update = async (req, res) => {
+    //Usuario identificado 
+    let userIdentity = req.user;
+
+    //Informacion para actualizar
+    let userToUpdate = req.body;
+
+    //Validacion
+    try {
+        validate(userToUpdate);
+    } catch (error) {
+        return res.status(400).send({
+            status: "error",
+            message: "Validacion no superada"
+        })
+    }
+
+    //Buscando el usuario propocionado
+    const existUsers = await User.find({
+        $or: [
+            {email: userToUpdate.email.toLowerCase()},
+            {username: userToUpdate.username.toLowerCase()}
+        ]
+    }).exec();
+
+    //Verificando que exista el usuario
+    if(existUsers.lenght == 0){
+        return res.status(500).send({
+            status: "error",
+            message: "Error en la consulta de usuario",
+        });
+    }
+
+
+    let userIsset = false;
+
+    //Verificando si ya existe el usuario antes de actualizar
+    existUsers.forEach(existUser => {
+        if(existUser && existUser._id != userIdentity.id) userIsset = true;
+    })
+
+    if(userIsset){
+        return res.status(200).send({
+            status: "success",
+            message: "El usuario ya existe",
+        });
+    }
+
+    //Actualizando contraseña si la quiere cambiar el usuario
+    if(userToUpdate.password) {
+        let pwd = await bcrypt.hash(userToUpdate.password, 10);
+        userToUpdate.password = pwd;
+    } else {
+        delete userToUpdate.password;
+    }
+
+    //Actualizando usuario
+    try {
+        let userUpdated = await User.findByIdAndUpdate({_id: userIdentity.id}, userToUpdate, {new: true});
+
+        if(!userUpdated) {
+            return res.status(500).send({
+                status: "error",
+                message: "Error al actualizar",
+            });
+        }
+
+        return res.status(200).send({
+            status: "success",
+            message: "Metodo de update",
+            user: userUpdated
+        });
+
+    } catch (error) {
+        return res.status(500).send({
+            status: "error",
+            message: "Error al actualizar",
+        });
+    }
+}
+
+const upload = async (req, res) => {
+
+    if(!req.file){
+        return res.status(404).send({
+            status: 'error',
+            message: 'La peticion no incluye la imagen',
+        });
+    }
+
+    let image = req.file.originalname;
+
+    const imageSplit = image.split("\.");
+    const extension = imageSplit[1];
+
+    if(extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif"){
+
+        //Borramos el archivo
+        const filePath = req.file.path;
+        const fileDeleted = fs.unlinkSync(filePath);
+
+        return res.status(404).send({
+            status: 'error',
+            message: 'La extension no es valida',
+        });
+    };
+
+    const uploadUserAvatar = await User.findOneAndUpdate({_id: req.user.id}, {image: req.file.filename}, {new:true});
+    console.log(uploadUserAvatar.image)
+
+    if(!uploadUserAvatar.image) {
+        return res.status(400).send({
+            status: 'error',
+            message: 'Hubo un error al subir la imagen',
+        });
+    }
+
+    return res.status(200).send({
+        status: "success",
+        message: "Imagen subida",
+        user: uploadUserAvatar,
+        file: req.file
     });
 }
 
@@ -139,4 +266,6 @@ module.exports = {
     register,
     login,
     profile,
+    update,
+    upload,
 }

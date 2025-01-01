@@ -130,3 +130,5 @@ dist
 .pnp.*
 
 run.bat
+
+uploads/avatars
