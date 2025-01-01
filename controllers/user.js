@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const validate = require("../helpers/validate");
 const fs = require("fs");
+const path = require("path");
 const User = require("../models/user");
 const jwt = require("../helpers/jwt");
 const mongoose = require('mongoose');
@@ -262,10 +263,30 @@ const upload = async (req, res) => {
     });
 }
 
+const avatar = (req, res) => {
+    const file = req.params.file;
+
+    const filePath = "./uploads/avatars/" + file;
+    console.log(filePath)
+
+    fs.stat(filePath, (error, exists) => {
+
+        if(error || !exists){
+            return res.status(404).send({
+                status: "error",
+                message: "No existe la imagen"
+            })
+        }
+
+        return res.sendFile(path.resolve(filePath));
+    });
+}
+
 module.exports = {
     register,
     login,
     profile,
     update,
     upload,
+    avatar,
 }
