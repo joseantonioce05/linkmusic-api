@@ -1,8 +1,11 @@
 const Artist = require("../models/artist");
+const Album = require("../models/album");
+const Song = require("../models/song");
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
 const fs = require("fs");
 const path = require("path");
+const album = require("../models/album");
 
 const save = async (req, res) => {
 
@@ -103,11 +106,16 @@ const remove = async (req, res) => {
 
     try {
         const artistRemove = await Artist.findByIdAndDelete(artistId);
+        const albumRemoved = await Album.find({artist: artistId}).remove();
+
+        const songRemoved = await Song.find({album: albumRemoved._id}).remove();
 
         return res.status(200).send({
             status: "success",
             message: "Artista borrado",
-            artistRemove
+            artistRemove,
+            albumRemoved,
+            songRemoved
         });
 
     } catch (error) { 
