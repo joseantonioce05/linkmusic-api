@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
 const fs = require("fs");
 const path = require("path");
-const album = require("../models/album");
 
 const save = async (req, res) => {
 
@@ -106,19 +105,22 @@ const remove = async (req, res) => {
 
     try {
         const artistRemove = await Artist.findByIdAndDelete(artistId);
-        const albumRemoved = await Album.find({artist: artistId}).remove();
+        const albumList = await Album.find({artist: artistId});
 
-        const songRemoved = await Song.find({album: albumRemoved._id}).remove();
+        albumList.forEach( async (album) => {
+            await Song.find({album: album._id}).deleteMany();
+        });
+
+        await Album.find({artist: artistId}).deleteMany();
 
         return res.status(200).send({
             status: "success",
             message: "Artista borrado",
             artistRemove,
-            albumRemoved,
-            songRemoved
         });
 
     } catch (error) { 
+        console.log(error)
         return res.status(500).send({
         status: "error",
         message: "Error al eliminar el artista o alguno de sus elementos",

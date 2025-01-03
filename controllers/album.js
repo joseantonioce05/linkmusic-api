@@ -1,4 +1,7 @@
 const Album = require("../models/album")
+const Song = require("../models/song")
+const fs = require("fs");
+const path = require("path");
 
 const save = async (req, res) => {
 
@@ -101,9 +104,102 @@ const update = async (req, res) => {
     
 }
 
+const upload = async (req, res) => {
+
+    let albumId = req.params.id;
+
+    if(!req.file){
+        return res.status(404).send({
+            status: 'error',
+            message: 'La peticion no incluye la imagen',
+        });
+    }
+
+    let image = req.file.originalname;
+
+    const imageSplit = image.split("\.");
+    const extension = imageSplit[1];
+
+    if(extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif"){
+
+        //Borramos el archivo
+        const filePath = req.file.path;
+        const fileDeleted = fs.unlinkSync(filePath);
+
+        return res.status(404).send({
+            status: 'error',
+            message: 'La extension no es valida',
+        });
+    };
+
+    const uploadAlbumImage = await Album.findOneAndUpdate({_id: albumId}, {image: req.file.filename}, {new:true});
+    console.log(uploadAlbumImage.image)
+
+    if(!uploadAlbumImage.image) {
+        return res.status(400).send({
+            status: 'error',
+            message: 'Hubo un error al subir la imagen',
+        });
+    }
+
+    return res.status(200).send({
+        status: "success",
+        message: "Imagen subida",
+        artist: uploadAlbumImage,
+        file: req.file
+    });
+}
+
+const image = (req, res) => {
+    const file = req.params.file;
+
+    const filePath = "./uploads/albums/" + file;
+    console.log(filePath)
+
+    fs.stat(filePath, (error, exists) => {
+
+        if(error || !exists){
+            return res.status(404).send({
+                status: "error",
+                message: "No existe la imagen"
+            })
+        }
+
+        return res.sendFile(path.resolve(filePath));
+    });
+}
+
+const remove = async (req, res) => {
+
+    const albumId = req.params.id;
+
+    try {
+        const albumRemoved = await Album.findById(albumId).deleteMany();
+        const songsRemoved = await Song.find({album: albumId}).deleteMany();
+
+        return res.status(200).send({
+            status: "success",
+            message: "Artista borrado",
+            albumRemoved,
+            songsRemoved
+        });
+
+    } catch (error) { 
+        console.log(error)
+        return res.status(500).send({
+        status: "error",
+        message: "Error al eliminar el artista o alguno de sus elementos",
+        error
+    });
+    }
+}
+
 module.exports = {
     save,
     one,
     list,
-    update
+    update,
+    upload,
+    image,
+    remove,
 }
