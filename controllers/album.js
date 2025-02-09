@@ -74,6 +74,24 @@ const list = async (req, res) => {
     }
 }
 
+const listAll = async (req, res) => {
+    try {
+        const albumList = await Album.find().populate("artist").sort("created_at")
+
+        return res.status(200).send({
+            status: "success",
+            message: "Albums conseguidos",
+            albumList
+        })
+    } catch (error) {
+        return res.status(404).send({
+            status: "error",
+            message: "Hubo un error al buscar album para listar",
+            error
+        });
+    }
+}
+
 const update = async (req, res) => {
 
     const albumId = req.params.albumId;
@@ -198,6 +216,7 @@ module.exports = {
     save,
     one,
     list,
+    listAll,
     update,
     upload,
     image,

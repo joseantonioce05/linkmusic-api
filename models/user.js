@@ -21,7 +21,7 @@ const UserSchema = Schema({
     },
     role: {
         type: String,
-        default: "role_user",
+        default: "user",
         select:false
     },
     image: {

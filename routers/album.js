@@ -22,6 +22,7 @@ const AlbumController = require("../controllers/album");
 router.post("/save", check.auth ,AlbumController.save);
 router.get("/one/:id", check.auth ,AlbumController.one);
 router.get("/list/:artistId", check.auth ,AlbumController.list);
+router.get("/listAll/", check.auth ,AlbumController.listAll);
 router.put("/update/:albumId", check.auth, AlbumController.update);
 router.post("/upload/:id", [check.auth, uploads.single("file0")], AlbumController.upload);
 router.get("/image/:file", AlbumController.image);

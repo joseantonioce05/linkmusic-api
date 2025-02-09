@@ -48,6 +48,7 @@ const register = async (req, res) => {
 
         //Hacemos una instacia de usuario
         let userToSave = new User(params);
+        userToSave.username = userToSave.username.toLowerCase()
 
         //Guardamos el usuario
         const savedUser = await userToSave.save();
@@ -75,7 +76,7 @@ const login = async (req, res) => {
     let params = req.body;
 
     //Comprobacion que el usuario envio correctamente los datos para logear
-    if(!params.email || !params.password){
+    if(!params.username || !params.password){
         return res.status(400).send({
             status: "error",
             message: "Faltan datos por enviar"
@@ -83,7 +84,7 @@ const login = async (req, res) => {
     }
 
     //Consultado el usuario con el email propocionado por el usuario
-    const existUser = await User.findOne({email: params.email.toLowerCase()}).select("+password +role").exec();
+    const existUser = await User.findOne({username: params.username.toLowerCase()}).select("+password +role").exec();
 
     //Comprobando que el usuario existe 
     if(existUser.length == 0){
@@ -129,7 +130,7 @@ const profile = async (req, res) => {
         });
     }
 
-    const user = await User.findOne({_id: id});
+    const user = await User.findOne({_id: id}).select("+role");
 
     return res.status(200).send({
         status: "success",

@@ -26,5 +26,6 @@ router.put("/update/:songId", check.auth, SongController.update);
 router.delete("/remove/:id", check.auth, SongController.remove);
 router.post("/upload/:id", [check.auth, uploads.single("file0")], SongController.upload);
 router.get("/audio/:file", SongController.audio);
+router.get("/all/:page?", check.auth ,SongController.all)
 
 module.exports = router;

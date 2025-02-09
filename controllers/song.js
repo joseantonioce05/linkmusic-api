@@ -45,6 +45,31 @@ const one = async (req, res) => {
     }
 }
 
+const all = async (req, res) => {
+    let page = req.params.page || 1; 
+    const itemsPerPage = 5;
+
+    try {
+        const allSongList = await Song.find()
+        .populate({path: "album", populate:{path: "artist", model: "Artist"}})
+        .sort("created_at")
+        .skip((page - 1) * itemsPerPage)
+        .limit(itemsPerPage)
+        
+        return res.status(200).send ({
+            status: "success",
+            message: "Lista de canciones",
+            songList: allSongList
+        })
+    } catch (error) {
+        return res.status(500).send({
+            status: "error",
+            message: "Hubo un error al traer la lista de canciones",
+            error,
+        })
+    }
+}
+
 const list = async (req, res) => {
     let albumId = req.params.albumId;
 
@@ -201,5 +226,6 @@ module.exports = {
     update,
     remove,
     upload,
-    audio
+    audio,
+    all
 }
