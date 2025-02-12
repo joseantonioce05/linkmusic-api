@@ -1,4 +1,4 @@
-const {Schema, model} = require("mongoose");
+const {Schema, model, default: mongoose} = require("mongoose");
 
 const UserSchema = Schema({
     name: {
@@ -28,6 +28,9 @@ const UserSchema = Schema({
         type: String,
         default: "default.png"
     },
+    song_favorite: [{
+        type: mongoose.Schema.Types.ObjectId, ref: "Song"
+    }],
     created_at: {
         type: Date,
         default: Date.now

@@ -181,7 +181,7 @@ const upload = async (req, res) => {
             });
         };
     }
-
+    console.log(req.file.filename)
     const uploadSong = await Song.findOneAndUpdate({_id: songId}, {file: req.file.filename}, {new:true});
     console.log(uploadSong.file)
 

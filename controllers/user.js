@@ -5,6 +5,7 @@ const path = require("path");
 const User = require("../models/user");
 const jwt = require("../helpers/jwt");
 const mongoose = require('mongoose');
+const { populate } = require("dotenv");
 
 const register = async (req, res) => {
     let params = req.body;
@@ -130,7 +131,7 @@ const profile = async (req, res) => {
         });
     }
 
-    const user = await User.findOne({_id: id}).select("+role");
+    const user = await User.findOne({_id: id}).select("+role").populate({path: "song_favorite", populate: { path: "album", populate: {path: "artist"}}});
 
     return res.status(200).send({
         status: "success",
@@ -283,6 +284,26 @@ const avatar = (req, res) => {
     });
 }
 
+const song_favorite = async (req, res) => {
+    const params = req.body;
+
+    try {
+        const savedSong = await User.findByIdAndUpdate(params.userId, {$push: {song_favorite: params.songId}})
+
+        return res.status(200).send({
+            status: "success",
+            message: "Metodo de guardar favorito", 
+        });
+
+    } catch (error) {
+        return res.status(400).send({
+            status: "error",
+            message: "error",
+            error: error
+        });
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -290,4 +311,5 @@ module.exports = {
     update,
     upload,
     avatar,
+    song_favorite
 }
